@@ -2,12 +2,13 @@ import React from 'react'
 import { Button } from '@mui/material'
 import AddCircleIcon from '@mui/icons-material/AddCircle'
 
-const AddButton = () => {
+const AddButton = ({ handleClick }) => {
     return (
         <Button
             variant='contained'
-            sx={{ width: "125px", backgroundColor: "#75A1D0" }}
+            sx={{ width: "125px", backgroundColor: "#2196f3" }}
             startIcon={<AddCircleIcon />}
+            onClick={handleClick}
         >
             Add
         </Button>
