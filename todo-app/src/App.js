@@ -6,48 +6,30 @@ import Tasks from './components/Tasks'
 import TaskDialog from './components/TaskDialog'
 
 const App = () => {
-    const [toastOpen, setToastOpen] = useState(true)
-    const [toastMessage, setToastMessage] = useState('aerf')
-    const [toastMessageType, setToastMessageType] = useState('success')
+    const [toastOpen, setToastOpen] = useState(false)
+    const [toastMessage, setToastMessage] = useState('')
     const [dialogOpen, setDialogOpen] = useState(false)
     const [dialogTitle, setDialogTitle] = useState('')
     const [selectedTask, setSelectedTask] = useState({ title: '', description: '', deadline: '', priority: "low", isComplete: false })
-
-    function createData(title, description, deadline, priority, isComplete) {
-        return { title, description, deadline, priority, isComplete }
-    }
-
-    // const rows = [
-    //     createData('Frozen yoghurt', 159, 6.0, 24, false),
-    //     createData('Ice cream sandwich', 237, 9.0, 37, true),
-    //     createData('Eclair', 262, 16.0, 24, false)
-    // ];
-
+    const [hideTaskTitle, setHideTaskTitle] = useState(false)
     const [tasks, setTasks] = useState([])
 
 
     const handleClickAdd = () => {
-        console.log('add clicked')
         setDialogTitle('Add Task')
         setDialogOpen(true)
     }
 
     const handleClickUpdate = (task) => {
-        console.log('update clicked')
         setDialogTitle('Edit Task')
         setSelectedTask(task)
+        setHideTaskTitle(true)
         setDialogOpen(true)
-    }
-
-    console.log(selectedTask)
-
-    const handleClickDelete = (task) => {
-        console.log('delete clicked')
     }
 
     return (
         <Grid container spacing={1}>
-            <Toast open={toastOpen} setOpen={setToastOpen} message={toastMessage} setMessage={setToastMessage} messageType={toastMessageType} setMessageType={setToastMessageType} />
+            <Toast open={toastOpen} setOpen={setToastOpen} message={toastMessage} setMessage={setToastMessage} />
             <TaskDialog
                 dialogTitle={dialogTitle}
                 task={selectedTask}
@@ -56,12 +38,22 @@ const App = () => {
                 setTasks={setTasks}
                 open={dialogOpen}
                 setOpen={setDialogOpen}
+                setToastOpen={setToastOpen}
+                setToastMessage={setToastMessage}
+                hideTaskTitle={hideTaskTitle}
+                setHideTaskTitle={setHideTaskTitle}
             />
             <Grid item width="100%">
                 <Header handleClickAdd={handleClickAdd} />
             </Grid>
             <Grid item width="100%">
-                <Tasks tasks={tasks} setTasks={setTasks} handleClickUpdate={handleClickUpdate} handleClickDelete={handleClickDelete} />
+                <Tasks
+                    tasks={tasks}
+                    setTasks={setTasks}
+                    handleClickUpdate={handleClickUpdate}
+                    setToastOpen={setToastOpen}
+                    setToastMessage={setToastMessage}
+                />
             </Grid>
         </Grid>
     )

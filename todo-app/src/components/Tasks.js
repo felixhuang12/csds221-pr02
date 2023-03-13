@@ -11,7 +11,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import moment from 'moment';
 
-const Tasks = ({ tasks, setTasks, handleClickUpdate, handleClickDelete }) => {
+const Tasks = ({ tasks, setTasks, handleClickUpdate, setToastOpen, setToastMessage }) => {
 
     const handleCompleteCheck = (task) => {
         const taskToUpdateIndex = tasks.findIndex((t) => t.title === task.title)
@@ -20,6 +20,13 @@ const Tasks = ({ tasks, setTasks, handleClickUpdate, handleClickDelete }) => {
         const updatedTasks = [...tasks]
         updatedTasks[taskToUpdateIndex] = updatedTask
         setTasks(updatedTasks)
+    }
+
+    const handleDelete = (task) => {
+        const updatedTasks = tasks.filter((t) => t.title !== task.title)
+        setTasks(updatedTasks)
+        setToastOpen(true)
+        setToastMessage("Task successfully deleted!")
     }
 
     return (
@@ -61,9 +68,15 @@ const Tasks = ({ tasks, setTasks, handleClickUpdate, handleClickDelete }) => {
                                 </Button>}
                                 <Button
                                     variant="contained"
-                                    sx={{ width: "125px", backgroundColor: "red" }}
+                                    sx={{
+                                        width: "125px",
+                                        backgroundColor: "red",
+                                        '&:hover': {
+                                            backgroundColor: '#DC143C',
+                                        }
+                                    }}
                                     startIcon={<HighlightOffIcon />}
-                                    onClick={handleClickDelete}
+                                    onClick={() => handleDelete(row)}
                                 >
                                     Delete
                                 </Button>

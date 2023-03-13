@@ -9,11 +9,12 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import DoDisturbAltIcon from '@mui/icons-material/DoDisturbAlt'
 
-const TaskDialog = ({ dialogTitle, task, setSelectedTask, tasks, setTasks, open, setOpen }) => {
+const TaskDialog = ({ dialogTitle, task, setSelectedTask, tasks, setTasks, open, setOpen, setToastOpen, setToastMessage, hideTaskTitle, setHideTaskTitle }) => {
     const [taskTitle, setTaskTitle] = useState(task.title)
     const [taskDescription, setTaskDescription] = useState(task.description)
     const [taskDate, setTaskDate] = useState(task.deadline)
     const [taskPriority, setTaskPriority] = useState(task.priority)
+    const [taskTitleError, setTaskTitleError] = useState('')
 
     useEffect(() => {
         setTaskTitle(task.title)
@@ -22,44 +23,60 @@ const TaskDialog = ({ dialogTitle, task, setSelectedTask, tasks, setTasks, open,
         setTaskPriority(task.priority)
     }, [task])
 
+    const handleCurrentTaskTitle = (title) => {
+        setTaskTitle(title)
+        const existingTitle = tasks.find((t) => t.title === title)
+        setTaskTitleError("")
+        if (existingTitle) {
+            setTaskTitleError("Task title must be distinct!")
+        }
+    }
+
     const handleClose = () => {
-        setTaskTitle('')
-        setTaskDescription('')
-        setTaskDate('')
-        setSelectedTask({ title: '', description: '', deadline: '', priority: "low", isComplete: false })
         setOpen(false)
+        setTimeout(() => {
+            setTaskTitle('')
+            setTaskDescription('')
+            setTaskDate('')
+            setSelectedTask({ title: '', description: '', deadline: '', priority: "low", isComplete: false })
+            setHideTaskTitle(false)
+        }, 100)
     }
 
     const handleAdd = () => {
-        const newTask = {
-            title: taskTitle, 
-            description: taskDescription, 
-            deadline: taskDate, 
-            priority: taskPriority, 
-            isComplete: false
+        if (!taskTitleError && taskTitle && taskDescription && taskDate) {
+            const newTask = {
+                title: taskTitle,
+                description: taskDescription,
+                deadline: taskDate,
+                priority: taskPriority,
+                isComplete: false
+            }
+            setTasks(tasks.concat(newTask))
+            setToastOpen(true)
+            setToastMessage("Task successfully added!")
+            handleClose()
         }
-        setTasks(tasks.concat(newTask))
-        setOpen(false)
     }
 
     const handleUpdate = () => {
-        const taskToUpdateIndex = tasks.findIndex((t) => t.title === task.title)
-        const updatedTask = {
-            title: taskTitle, 
-            description: taskDescription, 
-            deadline: taskDate, 
-            priority: taskPriority, 
-            isComplete: false
+        if (taskDescription && taskDate) {
+            const taskToUpdateIndex = tasks.findIndex((t) => t.title === task.title)
+            const updatedTask = {
+                title: taskTitle,
+                description: taskDescription,
+                deadline: taskDate,
+                priority: taskPriority,
+                isComplete: false
+            }
+            const updatedTasks = [...tasks]
+            updatedTasks[taskToUpdateIndex] = updatedTask
+            setTasks(updatedTasks)
+            setToastOpen(true)
+            setToastMessage("Task successfully updated!")
+            handleClose()
         }
-        const updatedTasks = [...tasks]
-        updatedTasks[taskToUpdateIndex] = updatedTask
-        setTasks(updatedTasks)
-        setOpen(false)
     }
-
-    // console.log(taskTitle)
-    // console.log(taskDescription)
-    console.log(taskDate)
 
     return (
         <Dialog open={open} onClose={handleClose}>
@@ -74,16 +91,16 @@ const TaskDialog = ({ dialogTitle, task, setSelectedTask, tasks, setTasks, open,
             </DialogTitle>
 
             <FormControl sx={{ padding: 4, minWidth: "300px" }}>
-                <TextField
+                {!hideTaskTitle && <TextField
                     id="task-title"
                     label="Title"
                     required={true}
-                    error={taskTitle === ""}
-                    helperText={taskTitle === "" ? "Title is required!" : ""}
+                    error={taskTitle === "" || taskTitleError !== ""}
+                    helperText={taskTitle === "" ? "Title is required!" : taskTitleError}
                     value={taskTitle}
-                    onChange={({ target }) => setTaskTitle(target.value)}
+                    onChange={({ target }) => handleCurrentTaskTitle(target.value)}
                     sx={{ my: 1 }}
-                />
+                />}
 
                 <TextField
                     id="task-description"
@@ -97,13 +114,25 @@ const TaskDialog = ({ dialogTitle, task, setSelectedTask, tasks, setTasks, open,
                 />
 
                 <LocalizationProvider dateAdapter={AdapterMoment}>
-                    <DatePicker label="Deadline" value={taskDate} onChange={(selectedDate) => setTaskDate(selectedDate)} sx={{ my: 1 }} />
+                    <DatePicker
+                        label="Deadline"
+                        value={taskDate}
+                        onChange={(selectedDate) => setTaskDate(selectedDate)}
+                        sx={{ my: 1 }}
+                        slotProps={{
+                            textField: {
+                                error: !taskDate,
+                                helperText: !taskDate ? "Deadline is required!" : "",
+                                required: true
+                            }
+                        }}
+                    />
                 </LocalizationProvider>
 
                 <FormLabel id="priority-radio-group" sx={{ mt: 1 }}>Priority</FormLabel>
                 <RadioGroup
                     aria-labelledby="priority-radio-group"
-                    defaultValue={taskPriority}
+                    value={taskPriority}
                     name="radio-buttons-group"
                     row={true}
                     onChange={(selectedPriority) => setTaskPriority(selectedPriority.target.value)}
@@ -112,6 +141,7 @@ const TaskDialog = ({ dialogTitle, task, setSelectedTask, tasks, setTasks, open,
                     <FormControlLabel value="med" control={<Radio />} label="Medium" />
                     <FormControlLabel value="high" control={<Radio />} label="High" />
                 </RadioGroup>
+
                 <Stack display="flex" direction="row" justifyContent="flex-end" spacing={1} pt="16px">
                     {dialogTitle === "Add Task" ?
                         <Button
@@ -132,12 +162,19 @@ const TaskDialog = ({ dialogTitle, task, setSelectedTask, tasks, setTasks, open,
                         </Button>}
                     <Button
                         variant='contained'
-                        sx={{ width: "100px", backgroundColor: "red" }}
+                        sx={{
+                            width: "100px",
+                            backgroundColor: "red",
+                            '&:hover': {
+                                backgroundColor: '#DC143C',
+                            }
+                        }}
                         startIcon={<DoDisturbAltIcon />}
                         onClick={handleClose}
-                    >Cancel</Button>
+                    >
+                        Cancel
+                    </Button>
                 </Stack>
-
             </FormControl>
         </Dialog>
     )
